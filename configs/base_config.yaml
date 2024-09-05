@@ -1,0 +1,34 @@
+wandb:
+  entity: "wandb-japan"
+  project: "ichikara-test"
+  #run: please set up run name in a model-base config
+
+testmode: true
+inference_interval: 0 # seconds
+
+model:
+  artifact_path: null
+  max_model_len: 3000
+  chat_template: null
+  dtype: 'float16'
+  trust_remote_code: true
+  device_map: "auto"
+  load_in_8bit: false
+  load_in_4bit: false
+
+generator:
+  top_p: 1.0
+  temperature: 0.1
+  max_tokens: 128
+
+data_path: "weave:///wandb-japan/ichikara-test/object/All_20240829:goG8gTFlY5zvrOc9Lx6slD2kaLFggompoWPw8YlQifs"
+
+ichikara:
+  artifact_path: 'wandb-japan/ichikara-eval/ichikara-instruction-eval-001-001:v0'  # JTruthfulQAデータセットのアーティファクトパス
+  judge_prompts_path: ''
+  max_workers: 5
+  judge_model: 'gpt-4o-2024-05-13'
+
+sample_dataset:
+  artifacts_path: "your artifact path here"
+  # add necessary configration here
