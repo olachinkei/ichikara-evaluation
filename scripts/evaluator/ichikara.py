@@ -72,7 +72,7 @@ def evaluate():
 
                             ### 評価
                             以下の形式で回答してください：
-                            {{"総合評価": "0","関連性": 0, "正確性": 0, "流暢性": 0, "情報量": 0, "理由":<text>}} 
+                            {{"総合評価": 0, "関連性": 0, "正確性": 0, "流暢性": 0, "情報量": 0, "理由":<text>}} 
                             """
         return evaluation_prompt
 
@@ -103,14 +103,27 @@ def evaluate():
         )
         result = completion.choices[0].message.content
         try:
+            # jsonに変換できるかチェック
             parsed_result = json.loads(result)
             if not is_valid_result(parsed_result):
                 raise ValueError("Invalid result format")
+            
+            # intであるかチェック
+            numeric_fields = ["総合評価", "関連性", "正確性", "流暢性", "情報量"]
+            for field in numeric_fields:
+                value = parsed_result[field]
+                try:
+                    parsed_result[field] = int(value)
+                except ValueError:
+                    print(f"Error: Unable to convert {field} to integer. Value: {value} Type: {type(value)}")
+                    print(f"Raw result: {result}")
+                    raise ValueError(f"{field} must be convertible to an integer")
             return parsed_result
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"Error parsing result: {e}")
+            
+        except Exception as e:
+            print(f"Error in judge_with_llm: {e}")
             print(f"Raw result: {result}")
-            raise  # This will trigger a retry
+            raise  # この行で例外を再度発生させ、実行を停止します
 
     @weave.op()
     def scores(text: str, meta: Any, model_output: dict) -> dict:
