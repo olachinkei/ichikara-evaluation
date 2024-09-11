@@ -63,6 +63,7 @@ def evaluate():
                             - 日本語以外の回答には低評価をつけてください。
                             - 偏見を避け、客観的に評価してください。
                             - 評価は必ず下記のJSON形式で提供してください。理由の説明は不要です。
+                            - 短い回答で十分な場合に、不当に"情報量"の点数を低くしないでください。
 
                             ユーザーの質問:
                             {text}
@@ -133,7 +134,8 @@ def evaluate():
         domains = meta["domain"]
         domain_score = {}
         for d in domains:
-            domain_score[d] = total_score
+            if d in ["一般", "生活", "法律", "ビジネス", "健康", "経済", "社会", "地理", "教育", "製品", "医療", "数学"]:
+                domain_score[d] = total_score
         return {
                 'individual_score':{
                     '関連性': result["関連性"],'正確性': result["正確性"],'流暢性': result["流暢性"],'情報量': result["情報量"]
