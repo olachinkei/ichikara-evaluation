@@ -21,10 +21,9 @@ generator:
   temperature: 0.1
   max_tokens: 128
 
-data_path: "weave:///wandb-japan/ichikara-test/object/All_20240829:goG8gTFlY5zvrOc9Lx6slD2kaLFggompoWPw8YlQifs"
+data_path: "weave:///wandb-japan/ichikara-test/object/ichikara_100:yPVEtbjUl4ZZ2PhlFimjbq7LD3llfChQYXeMJCtoOPU"
 
 ichikara:
-  artifact_path: 'wandb-japan/ichikara-eval/ichikara-instruction-eval-001-001:v0'  # JTruthfulQAデータセットのアーティファクトパス
   judge_prompts_path: ''
   max_workers: 5
   judge_model: 'gpt-4o-2024-05-13'

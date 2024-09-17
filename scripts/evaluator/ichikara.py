@@ -25,10 +25,8 @@ def evaluate():
     weave_data = weave.ref(cfg.data_path).get()
     weave_data_list = [dict(row) for row in weave_data.rows]
     weave_data_list = weave_data_list
-   
 
     # Model definition
-   
     class LLMinvoke(weave.Model):
         model_name: str
         llm: any
@@ -134,7 +132,7 @@ def evaluate():
         domains = meta["domain"]
         domain_score = {}
         for d in domains:
-            if d in ["一般", "生活", "法律", "ビジネス", "健康", "経済", "社会", "地理", "教育", "製品", "医療", "数学"]:
+            if d in ["法律", "ビジネス", "経済", "教育", "医療"]:
                 domain_score[d] = total_score
         return {
                 'individual_score':{

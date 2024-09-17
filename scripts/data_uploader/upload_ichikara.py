@@ -23,13 +23,10 @@ def load_questions(question_file: str, begin: Optional[int], end: Optional[int])
     return questions
 
 # Load questions
-with wandb.init(entity="wandb-japan", project="ichikara-test") as run:
-    artifact = run.use_artifact('wandb-japan/ichikara-eval/ichikara-instruction-eval-001-001:v0', type='dataset')
-    artifact_dir = artifact.download()
-    questions = load_questions(artifact_dir + "/ichikara-instruction-eval-001-001.json", None, None)
+questions = load_questions("/workspace/filtered_ichikara_instruction_eval.json", None, None)
 
 # Create a dataset
-dataset = Dataset(name='All_20240829', rows=questions)
+dataset = Dataset(name='ichikara_100', rows=questions)
 
 # Publish the dataset
 weave.publish(dataset)
