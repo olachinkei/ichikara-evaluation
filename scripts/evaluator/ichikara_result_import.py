@@ -6,8 +6,6 @@ from config_singleton import WandbConfigSingleton
 from typing import Any, Dict, List
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-VALID_DOMAINS = ["法律", "教育", "医療", "経済", "ビジネス"]
-
 def normalize_text(text):
     return ' '.join(text.replace('\\n', ' ').replace('\n', ' ').split()).strip()
 
@@ -15,9 +13,6 @@ def preprocess_data(csv_path: str) -> Dict[str, Dict]:
     df = pd.read_csv(csv_path)
     df['inputs.example.text'] = df['inputs.example.text'].apply(normalize_text)
     return {normalize_text(row['inputs.example.text']): row.to_dict() for _, row in df.iterrows()}
-
-def filter_domains(domains: List[str]) -> List[str]:
-    return [domain for domain in domains if domain in VALID_DOMAINS]
 
 def evaluate():
     instance = WandbConfigSingleton.get_instance()
