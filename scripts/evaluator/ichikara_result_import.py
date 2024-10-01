@@ -26,10 +26,8 @@ def evaluate():
 
     for item in weave_data_list:
         item['text'] = normalize_text(item['text'])
-        if 'meta' in item and 'domain' in item['meta']:
-            item['meta']['domain'] = filter_domains(item['meta']['domain'])
 
-    preprocessed_data = preprocess_data("/workspace/test_human_auto_eval.csv")
+    preprocessed_data = preprocess_data("/workspace/llama3-1_99.csv")
 
     def get_matching_row(text: str) -> Dict:
         if text not in preprocessed_data:
@@ -57,26 +55,26 @@ def evaluate():
         result = judge_with_human(text, model_output["generated_text"])
         values = [
             float(result["関連性"]), float(result["正確性"]),
-            float(result["流暢性"]), float(result["情報量"])
+            float(result["流暢性"]), float(result["情報量"]),
+            float(result["総合評価"])
         ]
-        total_score = sum(values) / len(values)
         domains = meta["domain"]
         domain_score = {}
         for d in domains:
             if d in ["法律", "ビジネス", "経済", "教育", "医療"]:
-                domain_score[d] = total_score
+                domain_score[d] = values[4]
         return {
             'individual_score': {
                 '関連性': values[0], '正確性': values[1],
                 '流暢性': values[2], '情報量': values[3]
             },
             'domain_score': domain_score,
-            '総合評価': total_score,
+            '総合評価': values[4],
         }
     
     evaluation = Evaluation(dataset=weave_data_list,
                             scorers=[scores],
                             name="test_20240905")
     
-    with weave.attributes({'eval_method': 'llm', 'model_name':cfg.model.pretrained_model_name_or_path}):
+    with weave.attributes({'eval_method': 'human', 'model_name':cfg.model.pretrained_model_name_or_path}):
         asyncio.run(evaluation.evaluate(model))
