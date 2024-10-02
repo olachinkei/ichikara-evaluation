@@ -66,8 +66,9 @@ def evaluate():
         return {
             'individual_score': {
                 '関連性': values[0], '正確性': values[1],
-                '流暢性': values[2], '情報量': values[3]
+                '流暢性': values[2], '情報量': values[3],
             },
+            '理由': result["理由"],
             'domain_score': domain_score,
             '総合評価': values[4],
         }
