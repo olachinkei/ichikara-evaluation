@@ -25,10 +25,8 @@ def evaluate():
     weave_data = weave.ref(cfg.data_path).get()
     weave_data_list = [dict(row) for row in weave_data.rows]
     weave_data_list = weave_data_list
-   
 
     # Model definition
-   
     class LLMinvoke(weave.Model):
         model_name: str
         llm: any
@@ -106,14 +104,27 @@ def evaluate():
         )
         result = completion.choices[0].message.content
         try:
+            # jsonに変換できるかチェック
             parsed_result = json.loads(result)
             if not is_valid_result(parsed_result):
                 raise ValueError("Invalid result format")
+            
+            # intであるかチェック
+            numeric_fields = ["総合評価", "関連性", "正確性", "流暢性", "情報量"]
+            for field in numeric_fields:
+                value = parsed_result[field]
+                try:
+                    parsed_result[field] = int(value)
+                except ValueError:
+                    print(f"Error: Unable to convert {field} to integer. Value: {value} Type: {type(value)}")
+                    print(f"Raw result: {result}")
+                    raise ValueError(f"{field} must be convertible to an integer")
             return parsed_result
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"Error parsing result: {e}")
+            
+        except Exception as e:
+            print(f"Error in judge_with_llm: {e}")
             print(f"Raw result: {result}")
-            raise  # This will trigger a retry
+            raise  # この行で例外を再度発生させ、実行を停止します
 
     @weave.op()
     def scores(text: str, meta: Any, model_output: dict) -> dict:
@@ -123,7 +134,8 @@ def evaluate():
         domains = meta["domain"]
         domain_score = {}
         for d in domains:
-            domain_score[d] = total_score
+            if d in ["法律", "ビジネス", "経済", "教育", "医療"]:
+                domain_score[d] = total_score
         return {
                 'individual_score':{
                     '関連性': result["関連性"],'正確性': result["正確性"],'流暢性': result["流暢性"],'情報量': result["情報量"]

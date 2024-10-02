@@ -11,6 +11,7 @@ from llm_inference_adapter import get_llm_inference_engine
 from vllm_server import shutdown_vllm_server
 from utils import paginate_choices
 from evaluator import ichikara
+from evaluator import ichikara_result_import
 
 # Set config path
 config_dir = Path("configs")
@@ -63,12 +64,11 @@ WandbConfigSingleton.initialize(run, llm=None)
 cfg = WandbConfigSingleton.get_instance().config
 
 # Start inference server
-llm = get_llm_inference_engine()
+# llm = get_llm_inference_engine()
 instance = WandbConfigSingleton.get_instance()
-instance.llm = llm
+# instance.llm = llm
 
 # Generate output with models
-ichikara.evaluate()
-
+ichikara_result_import.evaluate()
 
 run.finish()
