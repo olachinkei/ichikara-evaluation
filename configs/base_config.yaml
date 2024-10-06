@@ -1,9 +1,7 @@
 wandb:
   entity: "wandb-japan"
   project: "ichikara-test"
-  #run: please set up run name in a model-base config
 
-testmode: true
 inference_interval: 0 # seconds
 
 model:
@@ -21,12 +19,10 @@ generator:
   temperature: 0.1
   max_tokens: 128
 
-data_path: "weave:///wandb-japan/ichikara-test/object/ichikara_100:yPVEtbjUl4ZZ2PhlFimjbq7LD3llfChQYXeMJCtoOPU"
-
 ichikara:
-  judge_prompts_path: ''
-  max_workers: 5
-  judge_model: 'gpt-4o-2024-05-13'
+  data_path: "weave:///wandb-japan/ichikara-test/object/ichikara_100:yPVEtbjUl4ZZ2PhlFimjbq7LD3llfChQYXeMJCtoOPU"
+  auto_eval_model: "gpt-4-0613"
+  upload_human_evaled_file: # After conducting human evaluation, add the path to the CSV file.
 
 sample_dataset:
   artifacts_path: "your artifact path here"
