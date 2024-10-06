@@ -1,48 +1,40 @@
-# Nejumi Leaderboard 3
+# Nejumi Leaderboard 3 for ichikara human evaluation
 ## Overview
 
-This repository is for the Nejumi Leaderboard 3, a comprehensive evaluation platform for large language models. The leaderboard assesses both general language capabilities and alignment aspects. For detailed information about the leaderboard, please visit [Nejumi Leaderboard](https://wandb.ai/wandb-japan/llm-leaderboard3/reports/Nejumi-LLM-3--Vmlldzo3OTg2NjM2) website.
+This repository provides an evaluation framework for large language models (LLMs) using the Ichikara dataset. It allows for assessment of LLM outputs using both automated scoring by another LLM ("LLM as a Judge") and human evaluation. This repository serves as a comprehensive tool for comparing the quality of LLM responses with a hybrid evaluation approach.
 
-## Evaluation Metrics
-Our evaluation framework incorporates a diverse set of metrics to provide a holistic assessment of model performance:
+For more detailed analysis and findings based on this code, please refer to the technical report available [here](https://wandb.ai/wandb-japan/ichikara-test/reports/Technical-Report-LLM-vs---Vmlldzo5NTQ2NjM1).
 
+## Usage
 
-| Main Category | Subcategory | Automated Evaluation with Correct Data | AI Evaluation | Note |
-|---------------|-------------|----------------------------------------|---------------|------|
-| General Language Processing | Expression | | MT-bench/roleplay (0shot)<br>MT-bench/humanities (0shot)<br>MT-bench/writing (0shot) | |
-| ^   | Translation | ALT e-to-j (jaster) (0shot, 2shot)<br>ALT j-to-e (jaster) (0shot, 2shot)<br>wikicorpus-e-to-j(jaster) (0shot, 2shot)<br>wikicorpus-j-to-e(jaster) (0shot, 2shot) | | |
-| ^   | Summarization | | | |
-| ^   | Information Extraction | JSQuaD (jaster) (0shot, 2shot) | | |
-| ^   | Reasoning | | MT-bench/reasoning (0shot) | |
-| ^   | Mathematical Reasoning | MAWPS*(jaster) (0shot, 2shot)<br>MGSM*(jaster) (0shot, 2shot) | MT-bench/math (0shot) | |
-| ^   | (Entity) Extraction | wiki_ner*(jaster) (0shot, 2shot)<br>wiki_coreference(jaster) (0shot, 2shot)<br>chABSA*(jaster) (0shot, 2shot) | MT-bench/extraction (0shot) | |
-| ^   | Knowledge / Question Answering | JCommonsenseQA*(jaster) (0shot, 2shot)<br>JEMHopQA*(jaster) (0shot, 2shot)<br>JMMLU*(0shot, 2shot)<br>NIILC*(jaster) (0shot, 2shot)<br>aio*(jaster) (0shot, 2shot) | MT-bench/stem (0shot) | |
-| ^   | English | MMLU_en (0shot, 2shot) | | |
-| ^   | semantic analysis | JNLI*(jaster) (0shot, 2shot)<br>JaNLI*(jaster) (0shot, 2shot)<br>JSeM*(jaster) (0shot, 2shot)<br>JSICK*(jaster) (0shot, 2shot)<br>Jamp*(jaster) (0shot, 2shot) | | |
-| ^   | syntactic analysis | JCoLA-in-domain*(jaster) (0shot, 2shot)<br>JCoLA-out-of-domain*(jaster) (0shot, 2shot)<br>JBLiMP*(jaster) (0shot, 2shot)<br>wiki_reading*(jaster) (0shot, 2shot)<br>wiki_pas*(jaster) (0shot, 2shot)<br>wiki_dependency*(jaster) (0shot, 2shot) | | |
-| Alignment | Controllability | jaster* (0shot, 2shot)<br>LCTG | | LCTG cannot be used for business purposes. Usage for research and using the result in the press release are acceptable. |
-| ^   | Ethics/Moral | JCommonsenseMorality*(2shot) | | |
-| ^   | Toxicity || LINE Yahoo Reliability Evaluation Benchmark | This dataset is not publicly available due to its sensitive content.| <TBU> |
-| ^   | Bias | JBBQ (2shot) | | JBBQ needs to be downloaded from [JBBQ github repository](https://github.com/ynklab/JBBQ_data?tab=readme-ov-file). |
-| ^   | Truthfulness | JTruthfulQA (coming) | |<TBU>|
-| ^   | Robustness | Test multiple patterns against JMMLU (W&B original) (0shot, 2shot)<br>- Standard method<br>- Choices are symbols<br>- Select anything but the correct answer | | |
+1. Run `run_eval.py` with the specified configuration for the LLM you want to evaluate. This will generate outputs for each Ichikara problem and evaluate them using "LLM as a Judge." The results are logged to W&B's Weave, allowing you to review inputs, outputs, and prompt information for each problem.
 
+    ```bash
+    python scripts/run_eval.py -c /path/to/LLM/config/file
+    ```
 
-- metrics with (0, 2-shot) are averaged across both settings.
-- Metrics marked with an asterisk (*) evaluate control capabilities.
-- For MT-bench, [StabilityAI's MT-Bench JP](https://github.com/Stability-AI/FastChat/tree/jp-stable) is used with GPT-4o-2024-05-13 as the model to evaluate.
-- For LCTG, the only quantity test is conducted. (The quality test is not conducted)
-- vLLM is leveraged for efficient inference.
-- **Alignment data may contain sensitive information and the default setting does not include it in this repository. If you want to evaluate your models agains Alinghment data, please check each dataset instruction carefully**
+2. Download the evaluation results as a CSV from the Weave's Traces. Then, preprocess the CSV for human evaluation using `ichikara_preprocessed_for_human_eval.py`. The resulting CSV will include empty columns for 'Relevance', 'Accuracy', 'Fluency', 'Information Coverage', 'Overall Rating', and 'Reason'.
 
-## Implementation Guide
+    ```bash
+    python scripts/evaluator/ichikara_preprocessed_for_human_eval.py --auto_evaled_csv /path/to/auto/evaled/file
+    ```
+
+3. Fill in the human evaluation scores in the CSV file created in step 2. Complete the columns for 'Relevance', 'Accuracy', 'Fluency', 'Information Coverage', 'Overall Rating', and 'Reason'.
+
+4. Upload the human evaluation results to Weave. Specify the path to the human-evaluated CSV file in `ichikara.upload_human_evaled_file` in `configs/base_config.yaml`. Then, run `run_eval.py` again.
+
+    ```bash
+    python scripts/run_eval.py -c /path/to/LLM/config/file
+    ```
+
+5. The results of both automated and human evaluations are logged to Weave. You can further analyze the results using the Compare feature in the Evaluations section.
+
 
 ### Environment Setup
 1. Set up environment variables
-```
+```bash
 export WANDB_API_KEY=<your WANDB_API_KEY>
 export OPENAI_API_KEY=<your OPENAI_API_KEY>
-export LANG=ja_JP.UTF-8
 # if needed, set the following API KEY too
 export ANTHROPIC_API_KEY=<your ANTHROPIC_API_KEY>
 export GOOGLE_API_KEY=<your GOOGLE_API_KEY>
@@ -57,27 +49,26 @@ huggingface-cli login
 ```
 
 2. Clone the repository
-```bash
-git clone https://github.com/wandb/llm-leaderboard.git
-cd llm-leaderboard
-```
 
 3. Set up a Python environment with `requirements.txt`
 
 ### Dataset Preparation
 
-For detailed instructions on dataset preparation and caveate, please refer to [scripts/data_uploader/README.md](./scripts/data_uploader/README.md).
+To upload the ichikara dataset to Weave, use the provided script. Run the script below to upload the dataset to W&B.
 
-In Nejumi Leadeboard3, the following dataset are used.
+#### Command Line Argument Descriptions
 
-**Please ensure to thoroughly review the terms of use for each dataset before using them.**
+- `--entity`: Specify the WandB entity name. This corresponds to the project owner in W&B.
+- `--project`: Specify the W&B project name where the dataset will be saved.
+- `--question_file`: Path to the ichikara dataset as JSON format.
 
-1. [jaster](https://github.com/llm-jp/llm-jp-eval/tree/nejumi3-data)(Apache-2.0 license)
-2. [MT-Bench-JA](https://github.com/Stability-AI/FastChat/tree/jp-stable) (Apache-2.0 license)
-3. [LCTG](https://github.com/CyberAgentAILab/LCTG-Bench) (Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. Permission from AI shift to use for the leaderboard and was received.)
-4. [JBBQ](https://github.com/ynklab/JBBQ_data?tab=readme-ov-file) (Creative Commons Attribution 4.0 International License.)
-5. LINE Yahoo Inappropriate Speech Evaluation Dataset
+#### Example
 
+```bash
+python scripts/data_uploader/upload_ichikara.py --entity <W&B Entity> --project <W&B Project> --question_file /path/to/ichikara/dataset
+```
+
+Running the above command will upload the specified question file to the designated W&B project. You can review the uploaded data via W&B’s Weave.
 
 ### Configuration
 
@@ -90,10 +81,7 @@ Below, you will find a detailed description of the variables utilized in the `ba
 - **wandb:** Information used for Weights & Biases (W&B) support.
     - `entity`: Name of the W&B Entity.
     - `project`: Name of the W&B Project.
-    - `run_name`: Name of the W&B run. Please set up run name in a model-specific config.
-- **testmode:** Default is false. Set to true for lightweight implementation with a small number of questions per category (for functionality checks).
 - **inference_interval:** Set inference interval in seconds. This is particularly effective when there are rate limits, such as with APIs.
-- **run:** Set to true for each evaluation dataset you want to run.
 - **model:** Information about the model.
     - `artifacts_path`: Path of the wandb artifacts where the model is located.
     - `max_model_len`: Maximum token length of the input.
@@ -109,50 +97,10 @@ Below, you will find a detailed description of the variables utilized in the `ba
     - `temperature`: The temperature for sampling. Default is 0.1.
     - `max_tokens`: Maximum number of tokens to generate. This value will be overwritten in the script.
 
-- **num_few_shots:**  Number of few-shot examples to use.
-
-- **github_version:** For recording, not required to be changed.
-
-- **jaster:**  Settings for the Jaster dataset.
-    - `artifacts_path`: URL of the WandB Artifact for the Jaster dataset.
-    - `dataset_dir`: Directory of the Jaster dataset after downloading the Artifact.
-
-- **jmmlu_robustness:** Whether to include the JMMLU Robustness evaluation. Default is True.
-
-- **lctg:** Settings for the LCTG dataset.
-    - `artifacts_path`: URL of the WandB Artifact for the LCTG dataset.
-    - `dataset_dir`: Directory of the LCTG dataset after downloading the Artifact.
-
-- **jbbq:** Settings for the JBBQ dataset.
-    - `artifacts_path`: URL of the WandB Artifact for the JBBQ dataset.
-    - `dataset_dir`: Directory of the JBBQ dataset after downloading the Artifact.
-
-- **toxicity:** Settings for the toxicity evaluation.
-    - `artifact_path`: URL of the WandB Artifact of the toxicity dataset.
-    - `judge_prompts_path`: URL of the WandB Artifact of the toxicity judge prompts.
-    - `max_workers`: Number of workers for parallel processing.
-    - `judge_model`: Model used for toxicity judgment. Default is `gpt-4o-2024-05-13`
-
-- **mtbench:** Settings for the MT-Bench evaluation.
-    - `temperature_override`: Override the temperature for each category of the MT-Bench.
-    - `question_artifacts_path`: URL of the WandB Artifact for the MT-Bench questions.
-    - `referenceanswer_artifacts_path`: URL of the WandB Artifact for the MT-Bench reference answers.
-    - `judge_prompt_artifacts_path`: URL of the WandB Artifact for the MT-Bench judge prompts.
-    - `bench_name`: Choose 'japanese_mt_bench' for the Japanese MT-Bench, or 'mt_bench' for the English version.
-    - `model_id`: The name of the model. You can replace this with a different value if needed.
-    - `question_begin`: Starting position for the question in the generated text.
-    - `question_end`: Ending position for the question in the generated text.
-    - `max_new_token`: Maximum number of new tokens to generate.
-    - `num_choices`: Number of choices to generate.
-    - `num_gpus_per_model`: Number of GPUs to use per model.
-    - `num_gpus_total`: Total number of GPUs to use.
-    - `max_gpu_memory`: Maximum GPU memory to use (leave as null to use the default).
-    - `dtype`: Data type. Choose from None, float32, float16, bfloat16.
-    - `judge_model`: Model used for judging the generated responses. Default is `gpt-4o-2024-05-13`
-    - `mode`: Mode of evaluation. Default is 'single'.
-    - `baseline_model`: Model used for comparison. Leave as null for default behavior.
-    - `parallel`: Number of parallel threads to use.
-    - `first_n`: Number of generated responses to use for comparison. Leave as null for default behavior.
+- **ichikara:**  Settings for the ichikara dataset.
+    - `data_path`: URL of the Weave Dataset for the ichikara dataset.
+    - `auto_eval_model`: Model used for LLM as a judge.
+    - `upload_human_evaled_file`: Path to the csv file that has undergone human evaluation.
 
 ### Model configuration
 After setting up the base-configuration file, the next step is to set up a configuration file for model under `configs/`.
@@ -161,8 +109,6 @@ This framework supports evaluating models using APIs such as OpenAI, Anthropic, 
 
 - **wandb:** Information used for Weights & Biases (W&B) support.
     - `run_name`: Name of the W&B run.
-- **api:** Choose the API to use from `openai`, `anthropic`, `google`, `amazon_bedrock`.
-- **batch_size:** Batch size for API calls (recommended: 32).
 - **model:** Information about the model. 
     - `pretrained_model_name_or_path`: Name of the API model.
     - `size_category`: Specify "api" to indicate using an API model.
@@ -175,7 +121,6 @@ This framework also supports evaluating models using VLLM.  You need to create a
 
 - **wandb:** Information used for Weights & Biases (W&B) support.
     - `run_name`: Name of the W&B run.
-- **api:** Set to `vllm` to indicate using a VLLM model.
 - **num_gpus:** Number of GPUs to use.
 - **batch_size:** Batch size for VLLM (recommended: 256).
 - **model:** Information about the model.
@@ -199,27 +144,6 @@ If you want to check the output of the chat_templates, you can use the following
 python3 scripts/test_chat_template.py -m <model_id> -c <chat_template>
 ```
 If the model ID and chat_template are the same, you can omit -c <chat_template>.
-
-
-## Evaluation Execution
-Once you prepare the dataset and the configuration files, you can run the evaluation process.
-
-You can use either `-c` or `-s` option:
-    - **-c (config):** Specify the config file by its name, e.g., `python3 scripts/run_eval.py -c config-gpt-4o-2024-05-13.yaml`
-    - **-s (select-config):** Select from a list of available config files. This option is useful if you have multiple config files. 
-   ```bash
-   python3 scripts/run_eval.py -s
-   or 
-   python3 scripts/run_eval.py -c
-   ```
-
-
-The results of the evaluation will be logged to the specified W&B project.
-
-## When you want to edit runs or add additional evaluation metrics
-Please refer to [belend_run_configs/README.md](blend_run_configs/README.md).
-
-
 
 ## Contributing
 Contributions to this repository is welcom. Please submit your suggestions via pull requests. Please note that we may not accept all pull requests.

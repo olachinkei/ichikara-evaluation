@@ -21,13 +21,13 @@ def evaluate():
 
     weave.init(cfg.wandb.entity+"/"+cfg.wandb.project)
 
-    weave_data = weave.ref(cfg.data_path).get()
+    weave_data = weave.ref(cfg.ichikara.data_path).get()
     weave_data_list = [dict(row) for row in weave_data.rows]
 
     for item in weave_data_list:
         item['text'] = normalize_text(item['text'])
 
-    preprocessed_data = preprocess_data("/workspace/llama3-1_99.csv")
+    preprocessed_data = preprocess_data(cfg.ichikara.upload_human_evaled_file)
 
     def get_matching_row(text: str) -> Dict:
         if text not in preprocessed_data:
@@ -75,7 +75,7 @@ def evaluate():
     
     evaluation = Evaluation(dataset=weave_data_list,
                             scorers=[scores],
-                            name="test_20240905")
+                            name="ichikara_human_eval")
     
     with weave.attributes({'eval_method': 'human', 'model_name':cfg.model.pretrained_model_name_or_path}):
         asyncio.run(evaluation.evaluate(model))

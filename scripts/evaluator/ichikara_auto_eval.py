@@ -11,7 +11,6 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 import openai
 from openai import OpenAI
 
-
 def evaluate():
     instance = WandbConfigSingleton.get_instance()
     run = instance.run
@@ -22,7 +21,7 @@ def evaluate():
     weave.init(cfg.wandb.entity+"/"+cfg.wandb.project)
 
     # Data download
-    weave_data = weave.ref(cfg.data_path).get()
+    weave_data = weave.ref(cfg.ichikara.data_path).get()
     weave_data_list = [dict(row) for row in weave_data.rows]
     weave_data_list = weave_data_list
 
@@ -45,7 +44,6 @@ def evaluate():
     model = LLMinvoke(llm=llm, api_type=cfg.api, model_name = cfg.model.pretrained_model_name_or_path)
 
     #Evaluation definition
-
     def generate_evalution_prompt(text:str, answer:str):
         evaluation_prompt= f"""あなたは、AIアシスタントの回答を評価する評価者です。
         以下の、ユーザーの質問に対する回答を評価してください。
@@ -77,8 +75,6 @@ def evaluate():
         """
         return evaluation_prompt
 
-
-
     def is_valid_result(result):
         required_keys = ["総合評価", "関連性", "正確性", "流暢性", "情報量", "理由"]
         return all(key in result for key in required_keys) and \
@@ -90,7 +86,7 @@ def evaluate():
         client = OpenAI()
         evaluation_prompt = generate_evalution_prompt(text=text, answer=model_output)
         completion = client.chat.completions.create(
-            model="gpt-4-0613",
+            model=cfg.ichikara.auto_eval_model,
             messages=[
                 {
                     "role": "system",
@@ -128,7 +124,7 @@ def evaluate():
 
     @weave.op()
     def scores(text: str, meta: Any, model_output: dict) -> dict:
-        result = judge_with_llm(text,model_output["generated_text"])
+        result = judge_with_llm(text, model_output["generated_text"])
         values = [result["関連性"], result["正確性"], result["流暢性"], result["情報量"]]
         total_score = result["総合評価"]
         domains = meta["domain"]
@@ -146,29 +142,8 @@ def evaluate():
     
     evaluation = Evaluation(dataset=weave_data_list,
                             scorers=[scores],
-                            name="test_20240905")
+                            name="ichikara_auto_eval")
     
     # Inference and Evaluation
     with weave.attributes({'eval_method': 'llm', 'model_name':cfg.model.pretrained_model_name_or_path}):
         asyncio.run(evaluation.evaluate(model))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
